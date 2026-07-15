@@ -1,0 +1,117 @@
+<head>
+  <meta charset="UTF-8">
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  $for(author-meta)$
+  <meta name="author" content="$author-meta$" />
+  $endfor$
+  $if(date-meta)$
+  <meta name="dcterms.date" content="$date-meta$" />
+  $endif$
+  $if(keywords)$
+  <meta name="keywords" content="$for(keywords)$$keywords$$sep$, $endfor$" />
+  $endif$
+  $if(description-meta)$
+  <meta name="description" content="$description-meta$" />
+  $endif$
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <title>$if(title-prefix)$$title-prefix$ – $endif$$pagetitle$</title>
+  $for(header-includes)$
+  $header-includes$
+  $endfor$
+  $if(math)$
+  $if(mathjax)$
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  $endif$
+  $math$
+  $endif$
+</head>
+<body>
+  
+  $for(include-before)$
+  $include-before$
+  $endfor$
+
+  <header class="site-header">
+    <div class="header-inner container flex">
+      <a href="/" class="site-logo flex">
+	<img src="/assets/images/asterisk-logo0.svg" alt="Asterisk Logo">
+      </a>
+      <span class="liner"></span>
+      <nav class="site-nav">
+	<ul class="nav-list flex">
+	  <li><a href="/self.html">Archive</a></li>
+	  <li><a class="active" href="/self.html">Writings</a></li>
+	  <li><a href="/self.html">Images</a></li>
+	  <li><a href="/self.html">Projects</a></li>
+	  <li><a href="/self.html">Self</a></li>
+	</ul>
+      </nav>
+  </header>
+  
+  <main class="site-main">
+    <div class="body-start">
+      $body$
+      
+      $if(footnotes)$
+      <div class="post-notes">
+	$footnotes$
+      </div>
+      $endif$
+
+      $if(further-reading)$
+      <div class="further-reading">
+	<div clas="container flow">
+	  <h2>Further Reading</h2>
+	  <ul>
+	    $for(further-reading)$
+	    <li>$further-reading$</li>
+	    $endfor$
+	  </ul>
+	</div>
+      </div>
+      $endif$
+
+      $if(related)$
+      <div class="related">
+	<div class="container flow">
+	  <h2>Related</h2>
+	  <ul>
+	    $for(related)$
+	    <li><a href="./$related$.html">$related$</a></li>
+	    $endfor$
+	  </ul>
+	</div>
+      </div>
+      $endif$
+
+      $if(references)$
+      <div class="references">
+	<div class="container flow">
+	  <h2>References</h2>
+	  <ul>
+	    $for(references)$
+	    <li>$references$</li>
+	    $endfor$
+	  </ul>
+	</div>
+      </div>
+      $endif$
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner container">
+      <p>&copy; 2026 Asterisk</p>
+    </div>
+  </footer>
+
+  $for(include-after)$
+  $include-after$
+  $endfor$
+</body>
+
