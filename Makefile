@@ -1,117 +1,152 @@
+.PHONY: all index writings notes archives posts assets clean
+
 # CONFIG
-.PHONY: all archives assets clean
+
+SHELL := /usr/bin/bash
 
 BUILD := site
 CONTENT := content
-SCRIPT := scripts
-TEMPLATE := content/assets/templates
 DATA_DIR := $(BUILD)/data
+SCRIPT := scripts
 
-# COLLECTIONS
-COLLECTIONS := notes essays
+TEMPLATE := content/assets/templates
+TEMPLATE_DEF := -s --template=$(TEMPLATE)/default.html
+TEMPLATE_IDX := -s --template=$(TEMPLATE)/index.html
+TEMPLATE_WRT := -s --template=$(TEMPLATE)/writings.html
 
-# SOURCE
+PANDOC := pandoc
+PANDOC_COMMON := -s
+
+# COLLECTION
+COLLECTIONS := notes essays logs
+
+COLLECTION.notes.src := content/notes
+COLLECTION.notes.pattern := *.md
+COLLECTION.notes.out := writings/notes
+COLLECTION.notes.type := pages
+COLLECTION.notes.template := default.html
+COLLECTION.notes.title := Notes
+
+COLLECTION.essays.src := content/essays
+COLLECTION.essays.pattern := *.md
+COLLECTION.essays.out := writings/essays
+COLLECTION.essays.type := pages
+COLLECTION.essays.template := default.html
+COLLECTION.essays.title := Essays
+
+COLLECTION.logs.src := content/dumps
+COLLECTION.logs.pattern := log*.md
+COLLECTION.logs.out := logs
+COLLECTION.logs.type := stream
+COLLECTION.logs.template := default.html
+COLLECTION.logs.title := Logs
+
+# helper
+collection-src = $(COLLECTION.$(1).src)
+collection-pattern = $(COLLECTION.$(1).pattern)
+collection-out = $(COLLECTION.$(1).out)
+collection-type = $(COLLECTION.$(1).type)
+collection-template = $(COLLECTION.$(1).template)
+collection-template-path = $(TEMPLATE)/$(call collection-template,$(1))
+collection-title = $(COLLECTION.$(1).title)
+
+# DERIVED VARIABLES
+LISTS := $(addprefix $(DATA_DIR)/,$(addsuffix -list.md,$(COLLECTIONS)))
+INDEX_SRC := $(CONTENT)/pages/index.md
+INDEX_OUT := $(BUILD)/index.html
+WRITINGS_SRC := $(CONTENT)/pages/writings.md
+WRITINGS_OUT := $(BUILD)/writings/index.html
 ASSETS_SRC := $(CONTENT)/assets/static/*
-INDEX_SRC := $(wildcard $(CONTENT)/pages/index.md)
-WRITINGS_SRC := $(wildcard $(CONTENT)/pages/writings.md)
-NOTES_SRC := $(wildcard $(CONTENT)/notes/*.md)
-ESSAYS_SRC := $(wildcard $(CONTENT)/essays/*.md)
-
-# LIST
-NOTES_LIST := $(DATA_DIR)/notes-list.md
-ESSAYS_LIST := $(DATA_DIR)/essays-list.md
-LISTS := $(NOTES_LIST) $(ESSAYS_LIST)
-# LISTS := $(addprefix $(DATA_DIR)/,$(addsuffix -list.md, $(COLLECTIONS)))
-
-# OUTPUTS
 ASSETS_OUT := $(BUILD)/assets
-INDEX_OUT := $(patsubst content/pages/index.md,\
-		$(BUILD)/index.html,\
-		$(INDEX_SRC))
-WRITINGS_OUT := $(patsubst content/pages/writings.md,\
-		$(BUILD)/writings/index.html,\
-		$(WRITINGS_SRC))
-NOTES_OUT := $(patsubst $(CONTENT)/notes/%.md,\
-		$(BUILD)/writings/notes/%.html,\
-		$(NOTES_SRC))
-ESSAYS_OUT := $(patsubst $(CONTENT)/essays/%.md,\
-		$(BUILD)/writings/essays/%.html,\
-		$(ESSAYS_SRC))
 
-# COUNT
-NOTES_COUNT := $(words $(NOTES_SRC))
-ESSAYS_COUNT := $(words $(ESSAYS_SRC))
+# MACROS
+define GENERATE_LIST
 
-# TOP LEVEL PAGE
-all: index writings archives assets
+$(DATA_DIR)/$(1)-list.md: $(SCRIPT)/generate-list.sh
+	mkdir -p $$(dir $$@)
+	$$< \
+	$$(call collection-src,$(1)) \
+	$$(call collection-out,$(1)) \
+	> $$@
+endef
 
-archives: $(LISTS) $(NOTES_OUT) $(ESSAYS_OUT)
+$(foreach c,$(COLLECTIONS),$(eval $(call GENERATE_LIST,$(c))))
 
-# GENERATE LIST
-$(DATA_DIR)/%-list.md: $(SCRIPT)/generate-list.sh
-	@printf "[GEN] %s\n" "$@"
-	@mkdir -p $(dir $@)
-	$(SCRIPT)/generate-list.sh \
-		$(CONTENT)/$* \
-		writings/$* \
-		> $@
+# Derive collection metadata
+define COLLECTION_DERIVE
 
+$(1)_INPUTS := $$(wildcard $(call collection-src,$(1))/$$(call collection-pattern,$(1)))
 
-# GENERATE PAGES
-# build index
+$(1)_OUTPUTS := $$(patsubst $$(call collection-src,$(1))/%.md, \
+		$(BUILD)/$$(call collection-out,$(1))/%.html, \
+		$$($(1)_INPUTS))
+
+$(1)_COUNT := $$(words $$($(1)_INPUTS))
+
+endef
+
+$(foreach c,$(COLLECTIONS),$(eval $(call COLLECTION_DERIVE,$(c))))
+
+# counter
+COUNT_ARGS := $(foreach c,$(COLLECTIONS),-e "s/{{$(c)_count}}/$($(c)_COUNT)/g")
+
+# TODO:
+# Render using collection registry
+# renderer
+define COLLECTION_RULE
+
+$$($(1)_OUTPUTS): $(BUILD)/$$(call collection-out,$(1))/%.html: $$(call collection-src,$(1))/%.md
+	mkdir -p $$(dir $$@)
+	$(PANDOC) $(PANDOC_COMMON) \
+	--template=$$(call collection-template-path,$(1)) \
+	-o $$@
+endef
+
+$(foreach c,$(COLLECTIONS),$(eval $(call COLLECTION_RULE,$(c))))
+
+POSTS := $(foreach c,$(COLLECTIONS),$($(c)_OUTPUTS))
+
+print:
+	@echo "COLLECTIONS=$(COLLECTIONS)"
+	@echo "notes_INPUTS=$(notes_INPUTS)"
+	@echo "notes_OUTPUTS=$(notes_OUTPUTS)"
+	@echo "essays_INPUTS=$(essays_INPUTS)"
+	@echo "essays_OUTPUTS=$(essays_OUTPUTS)"
+	@echo "logs_INPUTS=$(logs_INPUTS)"
+	@echo "logs_OUTPUTS=$(logs_OUTPUTS)"
+	@echo "POSTS=$(POSTS)"
+
+# TARGET
+all: index writings archives posts assets
+
 index: $(INDEX_OUT)
-
-$(BUILD)/index.html: $(CONTENT)/pages/index.md
-	@printf "[GEN] %s\n" "$@"
-	@pandoc $(INDEX_SRC) \
-		--template=$(TEMPLATE)/index.html \
-		-o $(INDEX_OUT)
-
-# build writings
 writings: $(WRITINGS_OUT)
+archives: $(LISTS)
+posts: $(POSTS)
+assets: $(ASSETS_OUT)
 
-$(BUILD)/writings/index.html: $(CONTENT)/pages/writings.md $(NOTES_LIST) $(ESSAYS_LIST)
-	@printf "[GEN] %s\n" "$@"
-	@mkdir -p $(dir $@)
-	@printf "[REPLACE] {{notes_count}} with $(NOTES_COUNT)\n"
-	@printf "[REPLACE] {{essays_count}} with $(ESSAYS_COUNT)\n"
-	@printf "[REPLACE] {{notes_list}} with $(NOTES_LIST)\n"
-	@printf "[REPLACE] {{essays_list}} with $(ESSAYS_LIST)\n"
-	@sed \
-	-e "s/{{notes_count}}/$(NOTES_COUNT)/g" \
-	-e "s/{{essays_count}}/$(ESSAYS_COUNT)/g" \
-	-f scripts/writings.sed \
-	$< | pandoc - \
-		--template=$(TEMPLATE)/writings.html \
-		-o $(WRITINGS_OUT)
-
-# build notes
-notes: $(NOTES_OUT) $(NOTES_LIST)
-
-
-$(BUILD)/writings/notes/%.html: $(CONTENT)/notes/%.md
-	@printf "[GEN] %s\n" "$@"
-	@mkdir -p $(BUILD)/writings/notes
-	@pandoc $< \
-		--template=$(TEMPLATE)/default.html \
+# RULES
+$(INDEX_OUT): $(INDEX_SRC)
+	mkdir -p $(dir $@)
+	$(PANDOC) $(PANDOC_COMMON) \
+	$(TEMPLATE_IDX) \
+	-o $@
+$(WRITINGS_OUT): $(WRITINGS_SRC) $(LISTS)
+	mkdir -p $(dir $@)
+	sed \
+		-e "/{{notes_list}}/r $(DATA_DIR)/notes-list.md" \
+		-e "/{{notes_list}}/d" \
+		-e "/{{essays_list}}/r $(DATA_DIR)/essays-list.md" \
+		-e "/{{essays_list}}/d" \
+		$(COUNT_ARGS) \
+		$(WRITINGS_SRC) | \
+		$(PANDOC) $(PANDOC_COMMON) - \
+		$(TEMPLATE_WRT) \
 		-o $@
 
-# build essays
-essays: $(ESSAYS_OUT) $(ESSAYS_LIST)
+$(ASSETS_OUT): $(ASSETS_SRC)
+	mkdir -p $(BUILD)/assets
+	cp -r $(ASSETS_SRC) $(ASSETS_OUT)
 
-$(BUILD)/writings/essays/%.html: $(CONTENT)/essays/%.md
-	@printf "[GEN] %s\n" "$@"
-	@mkdir -p $(BUILD)/writings/essays
-	@pandoc $< \
-		--template=$(TEMPLATE)/default.html \
-		-o $@
-
-# build assets
-assets:
-	@printf "[COPY] %s\n" "$(ASSETS_SRC)"
-	@mkdir -p $(BUILD)/assets
-	@cp -r $(ASSETS_SRC) $(ASSETS_OUT)
-
-# clean
 clean:
-	rm -rf $(BUILD)/*
+	rm -rf $(BUILD)
