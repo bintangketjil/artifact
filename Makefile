@@ -91,6 +91,9 @@ $(foreach c,$(COLLECTIONS),$(eval $(call GENERATE_LIST,$(c))))
 # counter
 COUNT_ARGS := $(foreach c,$(COLLECTIONS),-e "s/{{$(c)_count}}/$($(c)_COUNT)/g")
 
+# TODO:
+# - split renderer based on collections.kind
+# - make sure everything works like before
 
 # new renderer
 PAGE_COLLECTIONS := $(foreach c,$(COLLECTIONS), \
