@@ -1,4 +1,4 @@
-.PHONY: all index writings notes archives posts assets clean
+.PHONY: all index writings notes archives collections assets clean
 
 # CONFIG
 
@@ -23,21 +23,21 @@ COLLECTIONS := notes essays logs
 COLLECTION.notes.src := content/notes
 COLLECTION.notes.pattern := *.md
 COLLECTION.notes.out := writings/notes
-COLLECTION.notes.type := pages
+COLLECTION.notes.kind := page
 COLLECTION.notes.template := default.html
 COLLECTION.notes.title := Notes
 
 COLLECTION.essays.src := content/essays
 COLLECTION.essays.pattern := *.md
 COLLECTION.essays.out := writings/essays
-COLLECTION.essays.type := pages
+COLLECTION.essays.kind := page
 COLLECTION.essays.template := default.html
 COLLECTION.essays.title := Essays
 
 COLLECTION.logs.src := content/dumps
-COLLECTION.logs.pattern := log*.md
+COLLECTION.logs.pattern := log-*.md
 COLLECTION.logs.out := logs
-COLLECTION.logs.type := stream
+COLLECTION.logs.kind := fragment
 COLLECTION.logs.template := default.html
 COLLECTION.logs.title := Logs
 
@@ -45,13 +45,13 @@ COLLECTION.logs.title := Logs
 collection-src = $(COLLECTION.$(1).src)
 collection-pattern = $(COLLECTION.$(1).pattern)
 collection-out = $(COLLECTION.$(1).out)
-collection-type = $(COLLECTION.$(1).type)
+collection-kind = $(COLLECTION.$(1).kind)
 collection-template = $(COLLECTION.$(1).template)
 collection-template-path = $(TEMPLATE)/$(call collection-template,$(1))
 collection-title = $(COLLECTION.$(1).title)
 
 # DERIVED VARIABLES
-LISTS := $(addprefix $(DATA_DIR)/,$(addsuffix -list.md,$(COLLECTIONS)))
+LISTS := $(foreach c,$(COLLECTIONS),$(DATA_DIR)/$(c)/list.md)
 INDEX_SRC := $(CONTENT)/pages/index.md
 INDEX_OUT := $(BUILD)/index.html
 WRITINGS_SRC := $(CONTENT)/pages/writings.md
@@ -60,18 +60,6 @@ ASSETS_SRC := $(CONTENT)/assets/static/*
 ASSETS_OUT := $(BUILD)/assets
 
 # MACROS
-define GENERATE_LIST
-
-$(DATA_DIR)/$(1)-list.md: $(SCRIPT)/generate-list.sh
-	mkdir -p $$(dir $$@)
-	$$< \
-	$$(call collection-src,$(1)) \
-	$$(call collection-out,$(1)) \
-	> $$@
-endef
-
-$(foreach c,$(COLLECTIONS),$(eval $(call GENERATE_LIST,$(c))))
-
 # Derive collection metadata
 define COLLECTION_DERIVE
 
@@ -87,48 +75,82 @@ endef
 
 $(foreach c,$(COLLECTIONS),$(eval $(call COLLECTION_DERIVE,$(c))))
 
+# Generate list
+define GENERATE_LIST
+
+$(DATA_DIR)/$(1)/list.md: $(SCRIPT)/generate-list.sh
+	mkdir -p $$(dir $$@)
+	$$< \
+		$$(call collection-out,$(1)) \
+		$$($(1)_INPUTS) \
+		> $$@
+endef
+
+$(foreach c,$(COLLECTIONS),$(eval $(call GENERATE_LIST,$(c))))
+
 # counter
 COUNT_ARGS := $(foreach c,$(COLLECTIONS),-e "s/{{$(c)_count}}/$($(c)_COUNT)/g")
 
-# TODO:
-# Render using collection registry
+
+# new renderer
+PAGE_COLLECTIONS := $(foreach c,$(COLLECTIONS), \
+			$(if $(filter page,$(call collection-kind,$(c))),$(c)))
+FRAGMENT_COLLECTIONS := $(foreach c,$(COLLECTIONS), \
+			$(if $(filter fragment,$(call collection-kind,$(c))),$(c)))
+
 # renderer
-define COLLECTION_RULE
+define PAGE_RULE
 
 $$($(1)_OUTPUTS): $(BUILD)/$$(call collection-out,$(1))/%.html: $$(call collection-src,$(1))/%.md
 	mkdir -p $$(dir $$@)
 	$(PANDOC) $(PANDOC_COMMON) \
+	$< \
 	--template=$$(call collection-template-path,$(1)) \
 	-o $$@
 endef
 
-$(foreach c,$(COLLECTIONS),$(eval $(call COLLECTION_RULE,$(c))))
+$(foreach c,$(PAGE_COLLECTIONS),$(eval $(call PAGE_RULE,$(c))))
 
-POSTS := $(foreach c,$(COLLECTIONS),$($(c)_OUTPUTS))
+define FRAGMENT_RULE
+
+
+
+endef
+
+$(foreach c,$(FRAGMENT_COLLECTIONS),$(eval $(call FRAGMENT_RULE,$(c))))
+
+OUTPUTS := $(foreach c,$(COLLECTIONS),$($(c)_OUTPUTS))
+
 
 print:
-	@echo "COLLECTIONS=$(COLLECTIONS)"
-	@echo "notes_INPUTS=$(notes_INPUTS)"
-	@echo "notes_OUTPUTS=$(notes_OUTPUTS)"
-	@echo "essays_INPUTS=$(essays_INPUTS)"
-	@echo "essays_OUTPUTS=$(essays_OUTPUTS)"
-	@echo "logs_INPUTS=$(logs_INPUTS)"
-	@echo "logs_OUTPUTS=$(logs_OUTPUTS)"
-	@echo "POSTS=$(POSTS)"
+	@echo "PAGE_COLLECTIONS=$(PAGE_COLLECTIONS)"
+	@echo "FRAGMENT_COLLECTIONS=$(FRAGMENT_COLLECTIONS)"
+# @echo "note type=$(call collection-type,notes)"
+# @echo "logs type=$(call collection-type,logs)"
+# @echo "COLLECTIONS=$(COLLECTIONS)"
+# @echo "notes_INPUTS=$(notes_INPUTS)"
+# @echo "notes_OUTPUTS=$(notes_OUTPUTS)"
+# @echo "essays_INPUTS=$(essays_INPUTS)"
+# @echo "essays_OUTPUTS=$(essays_OUTPUTS)"
+# @echo "logs_INPUTS=$(logs_INPUTS)"
+# @echo "logs_OUTPUTS=$(logs_OUTPUTS)"
+# @echo "POSTS=$(POSTS)"
+
 
 # TARGET
-all: index writings archives posts assets
+all: index writings archives collections assets
 
 index: $(INDEX_OUT)
 writings: $(WRITINGS_OUT)
 archives: $(LISTS)
-posts: $(POSTS)
+collections: $(OUTPUTS)
 assets: $(ASSETS_OUT)
 
 # RULES
 $(INDEX_OUT): $(INDEX_SRC)
 	mkdir -p $(dir $@)
 	$(PANDOC) $(PANDOC_COMMON) \
+	$< \
 	$(TEMPLATE_IDX) \
 	-o $@
 $(WRITINGS_OUT): $(WRITINGS_SRC) $(LISTS)
