@@ -1,4 +1,4 @@
-.PHONY: all index writings notes archives collections assets clean
+.PHONY: all top archives collections clean
 
 # CONFIG
 
@@ -58,6 +58,8 @@ WRITINGS_SRC := $(CONTENT)/pages/writings.md
 WRITINGS_OUT := $(BUILD)/writings/index.html
 ASSETS_SRC := $(CONTENT)/assets/static/*
 ASSETS_OUT := $(BUILD)/assets
+LOGPAGE_SRC := $(CONTENT)/dumps/logs.md
+LOGPAGE_OUT := $(BUILD)/logs/index.html
 
 # MACROS
 # Derive collection metadata
@@ -128,34 +130,26 @@ OUTPUTS := $(foreach c,$(COLLECTIONS),$($(c)_OUTPUTS))
 print:
 	@echo "PAGE_COLLECTIONS=$(PAGE_COLLECTIONS)"
 	@echo "FRAGMENT_COLLECTIONS=$(FRAGMENT_COLLECTIONS)"
-# @echo "note type=$(call collection-type,notes)"
-# @echo "logs type=$(call collection-type,logs)"
-# @echo "COLLECTIONS=$(COLLECTIONS)"
-# @echo "notes_INPUTS=$(notes_INPUTS)"
-# @echo "notes_OUTPUTS=$(notes_OUTPUTS)"
-# @echo "essays_INPUTS=$(essays_INPUTS)"
-# @echo "essays_OUTPUTS=$(essays_OUTPUTS)"
-# @echo "logs_INPUTS=$(logs_INPUTS)"
-# @echo "logs_OUTPUTS=$(logs_OUTPUTS)"
-# @echo "POSTS=$(POSTS)"
-
 
 # TARGET
-all: index writings archives collections assets
+all: top archives collections
+top: index writings logpage assets
 
 index: $(INDEX_OUT)
 writings: $(WRITINGS_OUT)
+assets: $(ASSETS_OUT)
+logpage: $(LOGPAGE_OUT)
 archives: $(LISTS)
 collections: $(OUTPUTS)
-assets: $(ASSETS_OUT)
 
 # RULES
 $(INDEX_OUT): $(INDEX_SRC)
 	mkdir -p $(dir $@)
 	$(PANDOC) $(PANDOC_COMMON) \
-	$< \
+	$(INDEX_SRC) \
 	$(TEMPLATE_IDX) \
 	-o $@
+
 $(WRITINGS_OUT): $(WRITINGS_SRC) $(LISTS)
 	mkdir -p $(dir $@)
 	sed \
@@ -172,6 +166,12 @@ $(WRITINGS_OUT): $(WRITINGS_SRC) $(LISTS)
 $(ASSETS_OUT): $(ASSETS_SRC)
 	mkdir -p $(BUILD)/assets
 	cp -r $(ASSETS_SRC) $(ASSETS_OUT)
+
+$(LOGPAGE_OUT): $(LOGPAGE_SRC)
+	mkdir -p $(dir $@)
+	$(PANDOC) $(PANDOC_COMMON) \
+	$(LOGPAGE_SRC) \
+	-o $@
 
 clean:
 	rm -rf $(BUILD)
