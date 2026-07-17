@@ -36,6 +36,45 @@ Latest Entry: $latest$
 <!-- ############# -->
 
 <!-- BEGIN LOG -->
+
+:::::: {.section .log .flow}
+
+::: {#260718 .log-header}
+
+### [18 July 2026] [02:30] {.log-title}
+
+[Whatever Works, or: How to Stay Put and Being on A Dream]{.log-subtitle}
+
+:::
+
+There goes my sleeping schedule. RIP. I think it's beyond ******.
+My stomach hurts, maybe from those foods --- or from none --- 
+or from the fact that it is almost 3 am and I feel so anxious.
+Unlike this quiet hours, I feel more like those old drives 
+that have been making those creaks every now and then.
+
+It's such a hassle to wait for *Artifact* to be working as I intended.
+It's funny because it comes from a simple idea and should become
+a rather simple solution.
+But I think sometimes behind simple things lies good machinery.
+
+Or sometimes simple questions needs some heavy explanation,
+or some tiny concepts can be ask and explain in a million ways. 
+Now, I'm making assumption!
+
+Today I wrote a metadata parser --- or at least I tried to.
+The idea is to let the builder decide what to do with an entry,
+instead of making every part of the system rediscover everything from the beginning.
+And I think it's a good idea because it is a milestone to what
+it can extends to. Now it can derive title, category, etc.
+later it can become anything.
+
+Or maybe not at all. Maybe I can just work with whatever it is end up to,
+as long as it works. Like that David Larry's movie, *Whatever Works*.
+
+::::::
+
+<!-- BEGIN LOG -->
 :::::: {.section .log .flow}
 
 ::: {#260716 .log-header}
