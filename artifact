@@ -1,0 +1,15 @@
+#!/usr/bin/env lua
+
+package.path = "./lib/?.lua;" .. package.path
+
+local discover = require "discover"
+
+local command = arg[1]
+
+if command == "discover" then
+   discover.run(arg[2] or "content")
+
+else
+   io.stderr:write("unknow command: " .. tostring(command) .. "\n")
+   os.exit(1)
+end

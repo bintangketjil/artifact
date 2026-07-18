@@ -8,37 +8,22 @@ summary:
 
 # Artifact
 
-*A small Markdown-based publishing system*
+````
+       document
+          |
+        reader
+          |
+        entry
+          |
+       validator
+          |
+       manifest
+          |
+       builder
+	      |
+        output
 
-
-```
-                Artifact
-      A Markdown publishing system
-
-               Entry
-                 │
-     ┌───────────┴───────────┐
-     │                       │
- Metadata                Markdown
-     │                       │
-     └───────────┬───────────┘
-                 │
-              Parser
-                 │
-            Entry object
-                 │
-    ┌────────────┼────────────┐
-    │            │            │
- Archive     Category      Type
- Generator   Generator    Generator
-    │            │            │
-    └────────────┼────────────┘
-                 │
-             HTML Output
-                 │
-              Asterisk
-```
-
+````
 
 We're trying to make a publishing system that just works --- 
 at least for our personal use. Sometimes there is documents 
