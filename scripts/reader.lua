@@ -3,20 +3,28 @@ package.path = package.path .. ";" .. script_path .. "?.lua"
 
 local json = require "json"
 
+local entry = {}
+
 function Meta(meta)
-   local metadata = {}
+   entry = {}
 
    for key, value in pairs(meta) do
-      metadata[key] = normalize(value)
+      entry[key] = normalize(value)
    end
-
-   print(json.encode(metadata))
-
+   -- print(json.encode(entry))
    return meta
 end
 
+function Pandoc(doc)
+   io.write(json.encode(entry))
+   doc.blocks= {}
+   return doc
+end
+
+-- TODO:
+-- move dump() to util.lua
 function dump(value, indent)
-   indent = inder or 0
+   indent = indent or 0
    local spacing = string.rep(" ", indent)
 
    if type(value) ~= "table" then
@@ -42,6 +50,10 @@ end
 
 function normalize(value)
    local t = pandoc.utils.type(value)
+
+   if t == "Blocks" then
+      return nil
+   end
 
    if t == "Inlines" then
       local str = pandoc.utils.stringify(value)

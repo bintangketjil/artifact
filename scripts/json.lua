@@ -30,7 +30,6 @@ local function is_array(tbl)
 end
 
 function json.encode(value)
-   print("ENCODE:", type(value), value)
    local t = type(value)
 
    if t == "string" then
