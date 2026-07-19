@@ -11,7 +11,7 @@ local function escape_string(str)
 end
 
 local function indent(level)
-   return string.rep(" ", level)
+   return string.rep("  ", level)
 end
 
 local function is_array(tbl)
@@ -28,6 +28,10 @@ local function is_array(tbl)
       end
       
       count = count + 1
+   end
+
+   if count == 0 then
+      return false
    end
 
    return count == max
@@ -64,9 +68,67 @@ local function encode(value, pretty, level)
       return tostring(value)
 
    elseif t == "table" then
+      if is_array(value) then
+	 local items = {}
 
+	 for _, item in ipairs(value) do
+	    table.insert(items, encode(item, pretty, level + 1))
+	 end
+
+	 if not pretty then
+	    return "[" .. table.concat(items, ",") .. "]"
+	 end
+
+	 if #items == 0 then
+	    return "[]"
+	 end
+
+	 return "[\n"
+	    .. indent(level + 1)
+	    .. table.concat(items, ",\n" .. indent(level + 1))
+	    .. "\n"
+	    .. indent(level)
+	    .. "]"
+      else
+	 local items = {}
+
+	 for _, key in ipairs(sorted_keys(value)) do
+	    local item = value[key]
+
+	    local separator = pretty and ": " or ":"
+
+	    table.insert(
+	       items,
+	       escape_string(tostring(key))
+	       .. separator
+	       .. encode(item, pretty, level + 1)
+	    )
+	 end
+	 
+	 if not pretty then
+	    return "{" .. table.concat(items, ",") .. "}"
+	 end
+	 
+	 if #items == 0 then
+	    return "{}"
+	 end
+
+	 return "{\n"
+	    .. indent(level + 1)
+	    .. table.concat(items, ",\n" .. indent(level + 1))
+	    .. "\n"
+	    .. indent(level)
+	    .. "}"
+      end
    else
       error("Cannot encode type: " .. t)
+   end
+end
+
+-- TODO:
+-- implement decode
+local function decode(value)
+
 end
 
 function json.encode(value)

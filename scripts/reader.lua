@@ -3,20 +3,20 @@ package.path = package.path .. ";" .. script_path .. "?.lua"
 
 local json = require "json"
 
-local entry = {}
+local metadata = {}
 
 function Meta(meta)
-   entry = {}
+   metadata = {}
 
    for key, value in pairs(meta) do
-      entry[key] = normalize(value)
+     metadata[key] = normalize(value)
    end
    -- print(json.encode(entry))
    return meta
 end
 
 function Pandoc(doc)
-   io.write(json.encode(entry))
+   io.write(json.encode(metadata))
    doc.blocks= {}
    return doc
 end

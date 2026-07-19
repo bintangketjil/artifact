@@ -2,7 +2,10 @@
 
 package.path = "./lib/?.lua;" .. package.path
 
-local discover = require "discover"
+local Discover = require "discover"
+local Reader = require "reader"
+local Metadata = require "metadata"
+local json = require "json"
 
 local function usage()
    print([[
@@ -43,8 +46,23 @@ if command == "-h" or command == "--help" then
 end
 
 if command == "discover" then
-   Discover.run(arg[2] or "content")
+   local files = Discover.run(arg[2] or "content")
 
+   for _, file in ipairs(files) do
+      print(file)
+   end
+   
+elseif command == "read" then
+   local files = Discover.run()
+
+   for _, path in ipairs(files) do
+      local document = Reader.read(path)
+
+      Metadata.extract(document)
+
+      print(json.pretty(document))
+   end
+   
 else
    io.stderr:write("\nError unknow command: " .. tostring(command) .. "\n")
    usage()
