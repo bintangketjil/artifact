@@ -4,12 +4,49 @@ package.path = "./lib/?.lua;" .. package.path
 
 local discover = require "discover"
 
+local function usage()
+   print([[
+
+Usage:
+
+     artifact <command> [options]
+
+      ]])
+end
+
+local function show_help()
+   print([[
+
+Artifact
+
+Usage:
+     artifact <command> [options]
+
+Commands:
+     discover
+     read
+     validate
+     manifest
+     build
+
+Options:
+    -h, --help
+
+]])
+end
+
 local command = arg[1]
 
+if command == "-h" or command == "--help" then
+   show_help()
+   os.exit(0)
+end
+
 if command == "discover" then
-   discover.run(arg[2] or "content")
+   Discover.run(arg[2] or "content")
 
 else
-   io.stderr:write("unknow command: " .. tostring(command) .. "\n")
+   io.stderr:write("\nError unknow command: " .. tostring(command) .. "\n")
+   usage()
    os.exit(1)
 end

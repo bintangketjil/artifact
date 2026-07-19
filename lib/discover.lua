@@ -1,15 +1,28 @@
-local discover = {}
+local Discover = {}
 
-function discover.run(root)
+
+function Discover.run(root)
    root = root or "content"
 
-   local cmd = "./scripts/discover.sh " .. root
-   local pipe = assert(io.popen(cmd))
+   local command = string.format(
+      "./scripts/discover.sh %q",
+      root
+   )
+
+   local pipe = assert(
+      io.popen(command),
+      "failed to execute discover.sh"
+   )
+
+   local files = {}
 
    for file in pipe:lines() do
-      print(file)
+      table.insert(files, file)
    end
+   
    pipe:close()
+
+   return files
 end
 
-return discover
+return Discover
