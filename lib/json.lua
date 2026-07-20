@@ -1,5 +1,7 @@
 local json = {}
 
+-- helper
+
 local function escape_string(str)
    str = str:gsub("\\", "\\\\")
    str = str:gsub('"', '\\"')
@@ -48,6 +50,8 @@ local function sorted_keys(tbl)
 
    return keys
 end
+
+-- encode
 
 local function encode(value, pretty, level)
    level = level or 0
@@ -125,10 +129,150 @@ local function encode(value, pretty, level)
    end
 end
 
--- TODO:
--- implement decode
-local function decode(value)
+-- parser
 
+local Parser = {}
+Parser.__index = Parser
+
+function Parser.new(text)
+   return setmetatable({text = text,pos = 1,}, Parser)
+end
+
+function Parser:peek()
+   return self.text:sub(self.pos, self.pos)
+end
+
+function Parser:advance()
+   local ch = self:peek()
+   self.pos = self.pos + 1
+   return ch
+end
+
+function Parser:error(message)
+   error(string.format("%s at position %d", message, self.pos))
+end
+
+function Parser:expect(expected)
+   local ch = self:advance()
+
+   if ch == "" then
+      self:error(string.format(
+		    "expected '%s', reached end of input",
+		    expected
+      ))
+   end
+
+   if ch ~= expected then
+      self:error(string.format(
+		    "expected '%s', got '%s'",
+		    expected,
+		    ch
+      ))
+   end
+end
+
+function Parser:skip_whitespace()
+   while true do
+      local ch = self:peek()
+
+      if ch == " "
+	 or ch == "\n"
+	 or ch == "\r"
+	 or ch == "\t"
+      then
+	 self:advance()
+      else
+	 break
+      end
+   end
+end
+
+function Parser:parse_value()
+   self:skip_whitespace()
+
+   local ch = self:peek()
+
+   if ch == '"' then
+      return self:parse_string()
+   end
+
+   self:error("unexpected character")
+end
+
+function Parser:parse_object()
+end
+
+function Parser:parse_array()
+end
+
+local escapes = {
+   ['"'] = '"',
+   ['\\'] = '\\',
+   ['/'] = '/',
+   ['b'] = '\b',
+   ['f'] = '\f',
+   ['n'] = '\n',
+   ['r'] = '\r',
+   ['t'] = '\t',
+}
+
+function Parser:parse_string()
+   self:expect('"')
+
+   local parts = {}
+
+   while true do
+      local ch = self:advance()
+
+      if ch == "" then
+	 self:error("unterminated string")
+      end
+
+      if ch == '"' then
+	 return table.concat(parts)
+      end
+
+      if ch == '\\' then
+	 local esc = self:advance()
+	 local value = escapes[esc]
+
+	 if not value then
+	    self:error("invalid escape sequence")
+	 end
+
+	 table.insert(parts, value)
+
+      else
+	 table.insert(parts, ch)
+      end
+   end
+end
+
+function Parser:parse_number()
+end
+
+function Parser:parse_literal(expected, value)
+end
+
+
+-- decode
+
+local function decode(text)
+   local parser = Parser.new(text)
+
+   local value = parser:parse_value()
+
+   parser:skip_whitespace()
+
+   if parser:peek() ~= "" then
+      parser:error("unexpected trailing characters")
+   end
+
+   return value
+end
+
+function json.decode(text)
+   return decode(text)
 end
 
 function json.encode(value)
