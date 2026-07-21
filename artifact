@@ -5,6 +5,7 @@ package.path = "./lib/?.lua;" .. package.path
 local Discover = require "discover"
 local Reader = require "reader"
 local Metadata = require "metadata"
+local Manifest = require "manifest"
 local json = require "json"
 
 local function usage()
@@ -53,7 +54,13 @@ if command == "discover" then
    end
    
 elseif command == "read" then
-   local files = Discover.run()
+   local files
+
+   if arg[2] then
+      files = { arg[2] }
+   else
+      files = Discover.run()
+   end
 
    for _, path in ipairs(files) do
       local document = Reader.read(path)
@@ -62,7 +69,14 @@ elseif command == "read" then
 
       print(json.pretty(document))
    end
-   
+
+elseif command == "manifest" then
+   local paths = Discover.run(arg[2] or "content")
+
+   local manifest = Manifest.build(paths)
+
+   print(json.pretty(manifest))
+
 else
    io.stderr:write("\nError unknow command: " .. tostring(command) .. "\n")
    usage()

@@ -1,3 +1,12 @@
+local root = debug.getinfo(1).source
+   :match("@(.*/)")
+   :gsub("/scripts/$", "")
+
+package.path = package.path
+   .. ";" .. root .. "?.lua"
+
+local json = require "json"
+
 local Document = require "document"
 
 local Reader = {}

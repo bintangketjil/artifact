@@ -1,4 +1,10 @@
 local json = {}
+json.null = setmetatable({}, {
+      __tostring = function()
+	 return "null"
+      end
+})
+
 
 -- helper
 
@@ -135,7 +141,10 @@ local Parser = {}
 Parser.__index = Parser
 
 function Parser.new(text)
-   return setmetatable({text = text,pos = 1,}, Parser)
+   return setmetatable({
+	 text = text,
+	 pos = 1,
+   }, Parser)
 end
 
 function Parser:peek()
@@ -196,13 +205,107 @@ function Parser:parse_value()
       return self:parse_string()
    end
 
-   self:error("unexpected character")
-end
+   if ch == "-" or (ch >= "0" and ch <= "9") then
+      return self:parse_number()
+   end
 
-function Parser:parse_object()
+   if ch == "t" then
+      return self:parse_literal("true", true)
+   end
+
+   if ch == "f" then
+      return self:parse_literal("false", false)
+   end
+
+   if ch == "n" then
+      return self:parse_literal("null", json.null)
+   end
+
+   if ch == "[" then
+      return self:parse_array()
+   end
+
+   if ch == "{" then
+      return self:parse_object()
+   end
+   
+   self:error(string.format(
+		 "unexpected character '%s'",
+		 ch
+   ))
 end
 
 function Parser:parse_array()
+   self:expect("[")
+
+   local array = {}
+
+   self:skip_whitespace()
+
+   if self:peek() == "]" then
+      self:advance()
+      return array
+   end
+
+   while true do
+      table.insert(array, self:parse_value())
+
+      self:skip_whitespace()
+
+      local ch = self:peek()
+
+      if ch == "," then
+	 self:advance()
+	 self:skip_whitespace()
+
+      elseif ch == "]" then
+	 self:advance()
+	 return array
+
+      else
+	 self:error("expected ',' or ']'")
+      end
+   end
+end
+
+function Parser:parse_object()
+   self:expect("{")
+
+   local object = {}
+
+   self:skip_whitespace()
+
+   if self:peek() == "}" then
+      self:advance()
+      
+      return object
+   end
+
+   while true do
+      local key = self:parse_string()
+
+      self:skip_whitespace()
+      self:expect(":")
+      self:skip_whitespace()
+
+      object[key] = self:parse_value()
+
+      self:skip_whitespace()
+
+      local ch = self:peek()
+
+      if ch == "," then
+	 self:advance()
+	 self:skip_whitespace()
+
+      elseif ch == "}" then
+	 self:advance()
+	 return object
+
+      else
+	 self:error("expected ',' or '}'")
+      end
+   end
 end
 
 local escapes = {
@@ -248,10 +351,84 @@ function Parser:parse_string()
    end
 end
 
+function Parser:is_digit(ch)
+   return ch >= "0" and ch <= "9"
+end
+
 function Parser:parse_number()
+   local parts = {}
+
+   -- optional sign
+   if self:peek() == "-" then
+      table.insert(parts, self:advance())
+   end
+
+   -- integer
+   local ch = self:peek()
+
+   if ch == "0" then
+      table.insert(parts, self:advance())
+
+      if self:peek() >= "0" and self:peek() <= "9" then
+	 self:error("leading zeros are not allowed")
+      end
+
+   elseif ch >= "1" and ch <= "9" then
+      repeat
+	 table.insert(parts, self:advance())
+	 ch = self:peek()
+      until not self:is_digit(ch)
+      
+   else
+      self:error("expected digit")
+   end
+
+   -- optional fraction
+   if self:peek() == "." then
+      table.insert(parts, self:advance())
+
+      if not self:is_digit(self:peek()) then
+	 self:error("expected digit after decimal point")
+      end
+
+      repeat
+	 table.insert(parts, self:advance())
+      until not self:is_digit(self:peek())
+   end
+
+   -- optional exponent
+   if self:peek() == "e" or self:peek() == "E" then
+      table.insert(parts, self:advance())
+
+      if self:peek() == "+" or self:peek() == "-" then
+	 table.insert(parts, self:advance())
+      end
+
+      if not self:is_digit(self:peek()) then
+	 self:error("expected digit in exponent")
+      end
+
+      repeat
+	 table.insert(parts, self:advance())
+      until not self:is_digit(self:peek())
+   end
+
+   return tonumber(table.concat(parts))
 end
 
 function Parser:parse_literal(expected, value)
+   for i = 1, #expected do
+      local ch = expected:sub(i, i)
+
+      if self:advance() ~= ch then
+	 self:error(string.format(
+		       "expected '%s'",
+		       expected
+	 ))
+      end
+   end
+
+   return value
 end
 
 

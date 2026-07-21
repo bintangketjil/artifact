@@ -20,7 +20,11 @@ function Discover.run(root)
       table.insert(files, file)
    end
    
-   pipe:close()
+   local ok = pipe:close()
+
+   if not ok then
+      error("discover failed")
+   end
 
    return files
 end
