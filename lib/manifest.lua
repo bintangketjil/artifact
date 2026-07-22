@@ -1,6 +1,7 @@
 local Reader = require "reader"
 local Metadata = require "metadata"
 local Normalize = require "normalize"
+local Validator = require "validator"
 
 local Manifest = {}
 
@@ -12,6 +13,7 @@ function Manifest.build(paths)
 
       Metadata.extract(document)
       Normalize.document(document)
+      Validator.document(document)
 
       table.insert(manifest, document)
       -- table.insert(manifest, {
