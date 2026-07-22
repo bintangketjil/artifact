@@ -28,12 +28,10 @@ function Validator.metadata(document)
    local metadata = document.metadata
 
    Validator.required(document, metadata, "category")
-   Validator.required(document, metadata, "type")
 
    local category = metadata.category
-   local type = metadata.type
 
-   if not category or not type then
+   if not category then
       return
    end
 
@@ -51,16 +49,19 @@ function Validator.metadata(document)
 
    local rule
 
+   -- top level
    if group.required then
       rule = group
    else
       Validator.required(document, metadata, "type")
 
-      if not metadata.type then
+      local type = metadata.type
+
+      if not type then
 	 return
       end
 
-      rule = group[metadata.type]
+      rule = group[type]
 
       if not rule then
 	 Validator.error(
@@ -68,7 +69,7 @@ function Validator.metadata(document)
 	    "type",
 	    string.format(
 	       "unknow type '%s' for category '%s'",
-	       metadata.type,
+	       type,
 	       category
 	    )
 	 )

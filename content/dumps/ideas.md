@@ -1,5 +1,6 @@
 ---
 title: ideas
+category: self
 ---
 
 ## Concepts or Phrase We Like

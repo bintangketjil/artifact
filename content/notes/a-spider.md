@@ -3,7 +3,8 @@ title: A Spider
 author: asterisk
 lang: en-US
 date: 2026-07-13
-type: notes
+category: writings
+type: note
 tags:
 	- self-reflection
 	- psychology

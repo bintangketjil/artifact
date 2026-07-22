@@ -2,6 +2,7 @@
 title: Writings
 description: Essay, notes, and fragment collected over time
 summary: A chronological archive together with thematic collection of longer essays, reading notes, and unfinished ideas
+category: page
 ---
 
 ::::::::: {.container}

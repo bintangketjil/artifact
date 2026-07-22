@@ -5,6 +5,7 @@ subtitle: "or Inquiries on the Meaning of Mundane Life"
 author: asterisk
 created: 2026-07-16
 latest: 2026-07-16
+category: page
 type: log
 header-includes: |
 	<style>

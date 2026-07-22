@@ -3,7 +3,8 @@ title: Doe
 author: asterisk
 lang: en-US
 date: 2026-05-7
-type: notes
+cateogory: writings
+type: note
 tags:
 	- self-reflection
 	- psychology

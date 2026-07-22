@@ -3,7 +3,8 @@ title: On Starting Something
 author: asterisk
 lang: id-ID
 date: 2026-07-12
-type: notes
+category: writings
+type: note
 tags:
      - self-reflection
      - habits

@@ -1,5 +1,6 @@
 ---
 title: Asterisk
+category: page
 ---
 
 :::::::: {.intro .container .flow}

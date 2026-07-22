@@ -44,8 +44,8 @@ Rules.page = extend(Rules.default, {
 
 -- type
 Rules.writings = {
-   notes = Rules.default,
-   essays = Rules.default,
+   note = Rules.default,
+   essay = Rules.default,
 }
 
 Rules.self = {

@@ -2,6 +2,8 @@
 title: On Being Late
 author: asterisk
 date: 2026-07-15
+category: writings
+type: essay
 ---
 
 
