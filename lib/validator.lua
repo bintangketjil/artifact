@@ -2,6 +2,8 @@ local Rules = require "rules"
 
 local Validator = {}
 
+
+
 function Validator.error(document, field, message)
    table.insert(document.diagnostics, {
 		   severity = "error",
@@ -18,8 +20,48 @@ function Validator.warning(document, field, message)
    })
 end
 
+local Allowed = {
+   title = true,
+   date = true,
+   category = true,
+   type = true,
+
+   author = true,
+   summary = true,
+   description = true,
+
+   tags = true,
+   status = true,
+
+   updated = true,
+   slug = true,
+
+   lang = true,
+   related = true,
+   references = true,
+
+   created = true,
+   latest = true,
+   subtitle = true,
+   ["title-suffix"] = true,
+
+}
+
+function Validator.fields(document)
+   for field in pairs(document.metadata) do
+      if not Allowed[field] then
+	 Validator.warning(
+	    document,
+	    field,
+	    string.format("unknown metadata '%s'", field)
+	 )
+      end
+   end
+end
+
 function Validator.document(document)
    Validator.metadata(document)
+   Validator.fields(document)
 
    return document
 end
@@ -41,7 +83,7 @@ function Validator.metadata(document)
       Validator.error(
 	 document,
 	 "category",
-	 string.format("unknow category '%s'", category)
+	 string.format("unknown category '%s'", category)
       )
 
       return
@@ -68,7 +110,7 @@ function Validator.metadata(document)
 	    document,
 	    "type",
 	    string.format(
-	       "unknow type '%s' for category '%s'",
+	       "unknown type '%s' for category '%s'",
 	       type,
 	       category
 	    )

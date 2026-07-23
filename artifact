@@ -6,6 +6,7 @@ local Discover = require "discover"
 local Reader = require "reader"
 local Metadata = require "metadata"
 local Manifest = require "manifest"
+local Reporter = require "reporter"
 local json = require "json"
 
 local function usage()
@@ -71,11 +72,51 @@ elseif command == "read" then
    end
 
 elseif command == "manifest" then
-   local paths = Discover.run(arg[2] or "content")
+   -- local paths = Discover.run(arg[2] or "content")
 
-   local manifest = Manifest.build(paths)
+   local manifest = Manifest.build(arg[2])
 
    print(json.pretty(manifest))
+
+elseif command == "validate" then
+   local manifest = Manifest.build(arg[2])
+
+   Reporter.validation(manifest)
+   print("documents:", #manifest)
+
+   local errors = 0
+
+   for _, document in ipairs(manifest) do
+      -- print(document.path, #document.diagnostics)
+      
+      if #document.diagnostics > 0 then
+	 errors = errors + 1
+
+	 print(document.path)
+
+	 for _, diagnostic in ipairs(document.diagnostics) do
+	    print(string.format(
+		     "  [%s] %s: %s",
+		     diagnostic.severity:upper(),
+		     diagnostic.field,
+		     diagnostic.message
+	    ))
+	 end
+
+	 print()
+      end
+   end
+
+   if errors == 0 then
+      print("Validation succesful.")
+   else
+      print(string.format(
+	       "%d document(s) contain diagnostics.",
+	       errors
+      ))
+
+      os.exit(1)
+   end
 
 else
    io.stderr:write("\nError unknow command: " .. tostring(command) .. "\n")
